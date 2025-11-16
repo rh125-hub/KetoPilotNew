@@ -3,8 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router/app_router.dart';
 import 'core/themes/app_theme.dart';
+import 'core/database/database_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize database
+  final dbService = DatabaseService();
+  await dbService.database;
+  
   runApp(const ProviderScope(child: MetabolicHealthApp()));
 }
 
