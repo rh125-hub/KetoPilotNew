@@ -7,6 +7,8 @@ import '../../features/food_diary/presentation/pages/food_diary_page.dart';
 import '../../features/health_logging/presentation/pages/health_logging_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/database_test/database_test_page.dart';
+import '../../features/trends/presentation/pages/trends_page.dart';
 
 part 'app_router.gr.dart';
 
@@ -27,5 +29,10 @@ class AppRouter extends _$AppRouter {
     AutoRoute(page: HealthLoggingRoute.page, path: '/health-logging'),
 
     AutoRoute(page: SettingsRoute.page, path: '/settings'),
+
+    AutoRoute(page: TrendsRoute.page, path: '/trends'),
+
+    // Database test route
+    AutoRoute(page: DatabaseTestRoute.page, path: '/database-test'),
   ];
 }

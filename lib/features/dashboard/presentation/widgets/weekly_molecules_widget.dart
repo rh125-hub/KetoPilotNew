@@ -10,28 +10,28 @@ class WeeklyMoleculesWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildLegend(),
+          _buildLegend(context),
           const SizedBox(height: 16),
-          _buildChart(),
+          _buildChart(context),
           const SizedBox(height: 16),
-          _buildSummary(),
+          _buildSummary(context),
         ],
       ),
     );
   }
 
-  Widget _buildLegend() {
+  Widget _buildLegend(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildLegendItem('Glucose (mg/dL)', Colors.orange.shade400),
-        _buildLegendItem('BHB (mmol/L)', Colors.amber.shade600),
-        _buildLegendItem('GKI', Colors.blue.shade400),
+        _buildLegendItem(context, 'Glucose (mg/dL)', Colors.orange.shade400),
+        _buildLegendItem(context, 'BHB (mmol/L)', Colors.amber.shade600),
+        _buildLegendItem(context, 'GKI', Colors.blue.shade400),
       ],
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
+  Widget _buildLegendItem(BuildContext context, String label, Color color) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -43,13 +43,17 @@ class WeeklyMoleculesWidget extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildChart() {
+  Widget _buildChart(BuildContext context) {
     final weekData = _getWeekData();
 
     return Container(
@@ -72,9 +76,10 @@ class WeeklyMoleculesWidget extends StatelessWidget {
                 child: Text(
                   dayData['day'],
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               );
@@ -137,7 +142,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSummary() {
+  Widget _buildSummary(BuildContext context) {
     final weekData = _getWeekData();
     final avgGlucose =
         weekData.map((d) => d['glucose'] as double).reduce((a, b) => a + b) / 7;
@@ -149,7 +154,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withOpacity(0.05),
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -157,12 +162,12 @@ class WeeklyMoleculesWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 'Weekly Averages',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const Spacer(),
@@ -174,6 +179,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildSummaryMetric(
+                  context,
                   '${avgGlucose.toStringAsFixed(0)}',
                   'Glucose',
                   Colors.orange.shade400,
@@ -181,6 +187,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
               ),
               Expanded(
                 child: _buildSummaryMetric(
+                  context,
                   '${avgBhb.toStringAsFixed(1)}',
                   'BHB',
                   Colors.amber.shade600,
@@ -188,6 +195,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
               ),
               Expanded(
                 child: _buildSummaryMetric(
+                  context,
                   '${avgGki.toStringAsFixed(1)}',
                   'GKI',
                   Colors.blue.shade400,
@@ -232,7 +240,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryMetric(String value, String label, Color color) {
+  Widget _buildSummaryMetric(BuildContext context, String value, String label, Color color) {
     return Column(
       children: [
         Text(
@@ -244,7 +252,13 @@ class WeeklyMoleculesWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+          ),
+        ),
       ],
     );
   }

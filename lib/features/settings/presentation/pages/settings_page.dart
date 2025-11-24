@@ -1,19 +1,20 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/themes/app_theme.dart';
+import '../../../../core/providers/theme_provider.dart';
 
 @RoutePage()
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
-  bool _darkMode = false;
+class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _notifications = true;
   bool _dataBackup = true;
   String _glucoseUnit = 'mg/dL';
@@ -56,9 +57,12 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppTheme.primaryColor,
-                child: Icon(Icons.person, color: Colors.white),
+              leading: CircleAvatar(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: Icon(
+                  Icons.person,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
               ),
               title: const Text('John Doe'),
               subtitle: const Text('john.doe@example.com'),
@@ -97,15 +101,30 @@ class _SettingsPageState extends State<SettingsPage> {
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            SwitchListTile(
-              title: const Text('Dark Mode'),
-              subtitle: const Text('Use dark theme'),
-              value: _darkMode,
-              onChanged: (value) {
-                setState(() {
-                  _darkMode = value;
-                });
-                // TODO: Update theme preference
+            Consumer(
+              builder: (context, ref, child) {
+                final themeMode = ref.watch(themeModeProvider);
+                final isDark = themeMode == ThemeMode.dark || 
+                    (themeMode == ThemeMode.system && 
+                     MediaQuery.of(context).platformBrightness == Brightness.dark);
+                
+                return SwitchListTile(
+                  title: const Text('Dark Mode'),
+                  subtitle: Text(themeMode == ThemeMode.system 
+                      ? 'Follow system setting' 
+                      : themeMode == ThemeMode.dark 
+                          ? 'Dark theme enabled' 
+                          : 'Light theme enabled'),
+                  value: isDark,
+                  onChanged: (value) async {
+                    final notifier = ref.read(themeModeProvider.notifier);
+                    if (value) {
+                      await notifier.setThemeMode(ThemeMode.dark);
+                    } else {
+                      await notifier.setThemeMode(ThemeMode.light);
+                    }
+                  },
+                );
               },
             ),
             const Divider(),
@@ -302,6 +321,16 @@ class _SettingsPageState extends State<SettingsPage> {
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () {
                 // TODO: Navigate to terms of service
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.storage, color: Colors.blue),
+              title: const Text('Database Test'),
+              subtitle: const Text('Test database operations'),
+              trailing: const Icon(Icons.arrow_forward_ios),
+              onTap: () {
+                context.router.pushNamed('/database-test');
               },
             ),
           ],

@@ -48,10 +48,18 @@ dependencies:
   
   # Storage
   shared_preferences: ^2.2.2
-  sqflite: ^2.3.0
+  sqflite: ^2.3.0  # Keep for gradual migration, can remove later
+  
+  # Cross-platform database (works on web, mobile, desktop)
+  drift: ^2.14.0
+  path_provider: ^2.1.1
+  path: ^1.8.3
+  sqlite3_flutter_libs: ^0.5.18  # Mobile/Desktop SQLite
+  # Web support is built into drift package
   
   # Networking
   dio: ^5.4.0
+  http: ^1.1.0
   
   # Date & Time
   intl: ^0.19.0
@@ -67,6 +75,7 @@ dependencies:
   
   # Utils
   uuid: ^4.2.1
+  crypto: ^3.0.3
   
   # Local notifications
   flutter_local_notifications: ^16.3.0
@@ -84,6 +93,11 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  
+  # Testing
+  sqflite_common_ffi: ^2.3.0
+  integration_test:
+    sdk: flutter
 
   # Code Generation
   build_runner: ^2.4.7
@@ -92,6 +106,7 @@ dev_dependencies:
   json_serializable: ^6.7.1
   injectable_generator: ^2.4.1
   auto_route_generator: ^7.3.2
+  drift_dev: ^2.14.0  # Drift code generation
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

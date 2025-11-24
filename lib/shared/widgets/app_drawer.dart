@@ -226,15 +226,15 @@ class AppDrawer extends StatelessWidget {
           height: 32, // Reduced from 36 to 32
           decoration: BoxDecoration(
             color: isSelected
-                ? AppTheme.primaryColor.withOpacity(0.1)
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8), // Reduced from 10 to 8
           ),
           child: Icon(
             isSelected ? selectedIcon : icon,
             color: isSelected
-                ? AppTheme.primaryColor
-                : AppTheme.textSecondaryColor,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
             size: 18, // Reduced from 20 to 18
           ),
         ),
@@ -242,8 +242,8 @@ class AppDrawer extends StatelessWidget {
           title,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: isSelected
-                ? AppTheme.primaryColor
-                : AppTheme.textPrimaryColor,
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             fontSize: 14, // Added explicit smaller size
           ),
@@ -253,7 +253,7 @@ class AppDrawer extends StatelessWidget {
         subtitle: Text(
           subtitle,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppTheme.textTertiaryColor,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             fontSize: 10, // Reduced from 11 to 10
           ),
           maxLines: 1,
@@ -262,7 +262,7 @@ class AppDrawer extends StatelessWidget {
         trailing: isSelected
             ? Icon(
                 Icons.arrow_forward_ios,
-                color: AppTheme.primaryColor,
+                color: Theme.of(context).colorScheme.primary,
                 size: 12, // Reduced from 14 to 12
               )
             : null,
@@ -285,13 +285,15 @@ class AppDrawer extends StatelessWidget {
         horizontal: 16,
         vertical: 2,
       ), // Reduced from 4 to 2
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 10, // Reduced from 11 to 10
-          fontWeight: FontWeight.w600,
-          color: AppTheme.textTertiaryColor,
-          letterSpacing: 0.3, // Reduced from 0.5 to 0.3
+      child: Builder(
+        builder: (context) => Text(
+          title,
+          style: TextStyle(
+            fontSize: 10, // Reduced from 11 to 10
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            letterSpacing: 0.3, // Reduced from 0.5 to 0.3
+          ),
         ),
       ),
     );
@@ -301,14 +303,19 @@ class AppDrawer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(6), // Reduced from 10 to 6
       decoration: BoxDecoration(
-        color: AppTheme.backgroundColor,
-        border: Border(top: BorderSide(color: AppTheme.dividerColor, width: 1)),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor,
+            width: 1,
+          ),
+        ),
       ),
       child: Row(
         children: [
           Icon(
             Icons.help_outline,
-            color: AppTheme.textTertiaryColor,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             size: 14,
           ), // Reduced from 16 to 14
           const SizedBox(width: 3), // Reduced from 4 to 3
@@ -316,7 +323,7 @@ class AppDrawer extends StatelessWidget {
             child: Text(
               'Help & Support',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondaryColor,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                 fontSize: 11, // Reduced from 12 to 11
               ),
               maxLines: 1,
@@ -325,7 +332,7 @@ class AppDrawer extends StatelessWidget {
           ),
           Icon(
             Icons.arrow_forward_ios,
-            color: AppTheme.textTertiaryColor,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             size: 10, // Reduced from 12 to 10
           ),
         ],

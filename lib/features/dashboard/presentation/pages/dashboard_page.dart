@@ -65,10 +65,10 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Theme.of(context).shadowColor.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -86,8 +86,8 @@ class _DashboardPageState extends State<DashboardPage> {
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.transparent,
             elevation: 0,
-            selectedItemColor: AppTheme.primaryColor,
-            unselectedItemColor: AppTheme.textSecondaryColor,
+            selectedItemColor: Theme.of(context).colorScheme.primary,
+            unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             selectedLabelStyle: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -149,9 +149,9 @@ class _DashboardPageState extends State<DashboardPage> {
         onPressed: () {
           context.router.pushNamed('/data-entry');
         },
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 4,
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
+        child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
@@ -162,7 +162,14 @@ class _DashboardPageState extends State<DashboardPage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.secondary,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -174,12 +181,12 @@ class _DashboardPageState extends State<DashboardPage> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(25),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.waving_hand,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   size: 24,
                 ),
               ),
@@ -192,7 +199,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       'Good Morning, John!',
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -200,7 +207,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     Text(
                       'How are you feeling today?',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.9),
                       ),
                     ),
                   ],
@@ -244,18 +251,18 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white, size: 20),
+          Icon(icon, color: Theme.of(context).colorScheme.onPrimary, size: 20),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -263,7 +270,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Text(
             subtitle,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.8),
               fontSize: 12,
             ),
           ),
@@ -300,7 +307,7 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             Row(
               children: [
-                Icon(Icons.analytics, color: AppTheme.primaryColor, size: 24),
+                Icon(Icons.analytics, color: Theme.of(context).colorScheme.primary, size: 24),
                 const SizedBox(width: 12),
                 Text(
                   'Glucose-Ketone Index',
@@ -406,7 +413,7 @@ class _DashboardPageState extends State<DashboardPage> {
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondaryColor),
+            ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
           ),
         ],
       ),
@@ -438,7 +445,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 icon: Icons.add_circle,
                 title: 'Log Data',
                 subtitle: 'Add glucose & ketones',
-                color: AppTheme.primaryColor,
+                color: Theme.of(context).colorScheme.primary,
                 onTap: () => context.router.pushNamed('/data-entry'),
               ),
               _buildQuickActionCard(
@@ -506,7 +513,7 @@ class _DashboardPageState extends State<DashboardPage> {
               Text(
                 subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondaryColor,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   fontSize: 11,
                 ),
                 maxLines: 2,
@@ -656,7 +663,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Text(
               title,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondaryColor,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
             const SizedBox(height: 4),
@@ -736,8 +743,8 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Center(
             child: Text(
               gki.toStringAsFixed(1),
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimary,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -754,7 +761,7 @@ class _DashboardPageState extends State<DashboardPage> {
           'Glucose: ${glucose.toStringAsFixed(0)} mg/dL • Ketones: ${ketones.toStringAsFixed(1)} mmol/L',
           style: Theme.of(
             context,
-          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryColor),
+          ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
         ),
         trailing: Icon(
           gki <= 3.0 ? Icons.check_circle : Icons.info,
@@ -786,12 +793,12 @@ class _DashboardPageState extends State<DashboardPage> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.school,
-                      color: AppTheme.primaryColor,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -808,14 +815,14 @@ class _DashboardPageState extends State<DashboardPage> {
                         Text(
                           'Learn how to interpret your glucose-ketone index for optimal health.',
                           style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppTheme.textSecondaryColor),
+                              ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.arrow_forward_ios,
-                    color: AppTheme.textTertiaryColor,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                     size: 16,
                   ),
                 ],
@@ -836,7 +843,7 @@ class _DashboardPageState extends State<DashboardPage> {
         context.router.pushNamed('/food-diary');
         break;
       case 2:
-        // TODO: Navigate to trends/analytics
+        context.router.pushNamed('/trends');
         break;
       case 3:
         context.router.pushNamed('/settings');
