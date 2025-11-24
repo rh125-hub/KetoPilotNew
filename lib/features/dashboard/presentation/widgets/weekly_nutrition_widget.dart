@@ -154,6 +154,7 @@ class WeeklyNutritionWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildSummaryMetric(
+                  context,
                   '${avgCarbs.toStringAsFixed(1)}g',
                   'Carbs',
                   Colors.red.shade400,
@@ -161,6 +162,7 @@ class WeeklyNutritionWidget extends StatelessWidget {
               ),
               Expanded(
                 child: _buildSummaryMetric(
+                  context,
                   '${avgProtein.toStringAsFixed(1)}g',
                   'Protein',
                   Colors.blue.shade400,
@@ -168,6 +170,7 @@ class WeeklyNutritionWidget extends StatelessWidget {
               ),
               Expanded(
                 child: _buildSummaryMetric(
+                  context,
                   '${avgFat.toStringAsFixed(1)}g',
                   'Fat',
                   Colors.green.shade400,
@@ -180,7 +183,7 @@ class WeeklyNutritionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryMetric(String value, String label, Color color) {
+  Widget _buildSummaryMetric(BuildContext context, String value, String label, Color color) {
     return Column(
       children: [
         Text(

@@ -9,7 +9,7 @@ import '../../../../core/database/daos/drift_diet_entry_dao.dart';
 import '../../../../core/database/daos/diet_entry_dao.dart';
 import '../../../../core/database/daos/drift_food_dao.dart';
 import '../../../../core/database/daos/food_dao.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint;
 import '../widgets/macro_bars_widget.dart';
 
 @RoutePage()
@@ -58,18 +58,14 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
     
     try {
       final dateStr = _selectedDate.toIso8601String().split('T')[0];
-      final entries = kIsWeb
-          ? await _driftDietEntryDao.getDietEntriesByDate(_userId, dateStr)
-          : await _dietEntryDao!.getDietEntriesByDate(_userId, dateStr);
+      final entries = await _dietEntryDao.getDietEntriesByDate(_userId, dateStr);
       
       // Convert DietEntryModel to _FoodEntryData
       final foodEntries = <_FoodEntryData>[];
       
       for (final entry in entries) {
         // Get food details
-        final food = kIsWeb
-            ? await _driftFoodDao.getFoodById(entry.foodId)
-            : await _foodDao!.getFoodById(entry.foodId);
+            final food = await _foodDao.getFoodById(entry.foodId);
         
         if (food != null) {
           foodEntries.add(_FoodEntryData(
@@ -153,11 +149,109 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
         controller: _tabController,
         children: [_buildTodayTab(), _buildHistoryTab()],
       ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).shadowColor.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: BottomNavigationBar(
+            currentIndex: 1, // Diary is index 1
+            onTap: (index) {
+              _navigateToIndex(index);
+            },
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            selectedItemColor: Theme.of(context).colorScheme.primary,
+            unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            selectedLabelStyle: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
+            items: const [
+              BottomNavigationBarItem(
+                icon: Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Icon(Icons.dashboard_outlined, size: 22),
+                ),
+                activeIcon: Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Icon(Icons.dashboard, size: 22),
+                ),
+                label: 'Dashboard',
+              ),
+              BottomNavigationBarItem(
+                icon: Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Icon(Icons.restaurant_outlined, size: 22),
+                ),
+                activeIcon: Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Icon(Icons.restaurant, size: 22),
+                ),
+                label: 'Diary',
+              ),
+              BottomNavigationBarItem(
+                icon: Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Icon(Icons.analytics_outlined, size: 22),
+                ),
+                activeIcon: Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Icon(Icons.analytics, size: 22),
+                ),
+                label: 'Trends',
+              ),
+              BottomNavigationBarItem(
+                icon: Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Icon(Icons.more_horiz, size: 22),
+                ),
+                activeIcon: Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Icon(Icons.more_horiz, size: 22),
+                ),
+                label: 'More',
+              ),
+            ],
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addFood(),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
+  }
+
+  void _navigateToIndex(int index) {
+    switch (index) {
+      case 0:
+        context.router.pushNamed('/dashboard');
+        break;
+      case 1:
+        // Already on food diary
+        break;
+      case 2:
+        context.router.pushNamed('/trends');
+        break;
+      case 3:
+        context.router.pushNamed('/settings');
+        break;
+    }
   }
 
   Widget _buildTodayTab() {
@@ -192,7 +286,6 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
 
   Widget _buildHistoryTab() {
     return _WeeklyHistoryView(
-      driftDietEntryDao: _driftDietEntryDao,
       dietEntryDao: _dietEntryDao,
       userId: _userId,
     );
@@ -771,11 +864,7 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
         );
         
         // Insert diet entry
-        if (kIsWeb) {
-          await _driftDietEntryDao.insertDietEntry(dietEntry);
-        } else {
-          await _dietEntryDao!.insertDietEntry(dietEntry);
-        }
+        await _dietEntryDao.insertDietEntry(dietEntry);
 
         // Close loading indicator
         if (!mounted) return;
@@ -845,9 +934,7 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
 
     // Get the full diet entry from database
     try {
-      final dietEntry = kIsWeb
-          ? await _driftDietEntryDao.getDietEntryById(entry.entryId!)
-          : await _dietEntryDao!.getDietEntryById(entry.entryId!);
+      final dietEntry = await _dietEntryDao.getDietEntryById(entry.entryId!);
 
       if (dietEntry == null) {
         if (!mounted) return;
@@ -861,9 +948,7 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
       }
 
       // Get food details
-      final food = kIsWeb
-          ? await _driftFoodDao.getFoodById(dietEntry.foodId)
-          : await _foodDao!.getFoodById(dietEntry.foodId);
+      final food = await _foodDao.getFoodById(dietEntry.foodId);
 
       if (food == null) {
         if (!mounted) return;
@@ -953,11 +1038,7 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
         synced: 0, // Mark as unsynced after update
       );
 
-      if (kIsWeb) {
-        await _driftDietEntryDao.updateDietEntry(updatedEntry);
-      } else {
-        await _dietEntryDao!.updateDietEntry(updatedEntry);
-      }
+      await _dietEntryDao.updateDietEntry(updatedEntry);
 
       // Reload entries
       await _loadDietEntries();
@@ -1010,11 +1091,7 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
 
   Future<void> _deleteDietEntry(int entryId) async {
     try {
-      if (kIsWeb) {
-        await _driftDietEntryDao.deleteDietEntry(entryId);
-      } else {
-        await _dietEntryDao!.deleteDietEntry(entryId);
-      }
+      await _dietEntryDao.deleteDietEntry(entryId);
 
       // Reload entries
       await _loadDietEntries();
@@ -1130,29 +1207,23 @@ class _AddFoodDialogState extends State<_AddFoodDialog> {
                 textCapitalization: TextCapitalization.words,
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _caloriesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Calories *',
-                        hintText: 'kcal',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Required';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Invalid number';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
+              TextFormField(
+                controller: _caloriesController,
+                decoration: const InputDecoration(
+                  labelText: 'Calories *',
+                  hintText: 'kcal',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Required';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Invalid number';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               Row(
@@ -1680,12 +1751,10 @@ class _FoodEntryData {
 
 /// Weekly History View Widget
 class _WeeklyHistoryView extends StatefulWidget {
-  final DriftDietEntryDao driftDietEntryDao;
-  final DietEntryDao? dietEntryDao;
+  final DriftDietEntryDao dietEntryDao;
   final int userId;
 
   const _WeeklyHistoryView({
-    required this.driftDietEntryDao,
     required this.dietEntryDao,
     required this.userId,
   });
@@ -1720,11 +1789,8 @@ class _WeeklyHistoryViewState extends State<_WeeklyHistoryView> {
       final startDate = _selectedWeekStart.toIso8601String().split('T')[0];
       final endDate = weekEnd.toIso8601String().split('T')[0];
 
-      final entries = kIsWeb
-          ? await widget.driftDietEntryDao.getDietEntriesByDateRange(
-              widget.userId, startDate, endDate)
-          : await widget.dietEntryDao!.getDietEntriesByDateRange(
-              widget.userId, startDate, endDate);
+      final entries = await widget.dietEntryDao.getDietEntriesByDateRange(
+          widget.userId, startDate, endDate);
 
       // Group entries by date and calculate daily totals
       final dailyTotals = <String, _DailyMacros>{};

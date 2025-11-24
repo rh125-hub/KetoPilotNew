@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import '../database/models/food_model.dart';
+import '../database/models/user_model.dart';
 import '../database/daos/drift_food_dao.dart';
 import '../database/daos/drift_user_dao.dart';
 import '../database/daos/food_creation_audit_dao.dart';
@@ -12,23 +14,34 @@ class FoodCreationService {
   final FoodCreationAuditDao? _auditDao = null; // Temporarily disabled during migration
 
   /// Check if user can create food (rate limiting)
-  /// On web, rate limiting is disabled (returns always allowed)
+  /// If user doesn't exist, creates a default user and allows creation
   Future<FoodCreationResult> canCreateFood(int userId) async {
-    // On web, skip rate limiting (UserDao uses sqflite which doesn't work on web)
-    if (kIsWeb) {
-      // Return default values - no rate limiting on web
-      final now = DateTime.now();
-      return FoodCreationResult(
-        canCreate: true,
-        remainingQuota: 999, // Unlimited on web
-        resetDate: now.add(const Duration(days: 21)).toIso8601String().split('T')[0],
-      );
-    }
-
-    // Mobile: Use actual rate limiting
-    final user = await _userDao!.getUserById(userId);
+    var user = await _userDao.getUserById(userId);
+    
+    // If user doesn't exist, create a default user
     if (user == null) {
-      throw Exception('User not found');
+      debugPrint('[FOOD CREATION] User $userId not found, creating default user...');
+      final defaultUser = UserModel(
+        email: 'user$userId@ketopilot.local',
+        passwordHash: 'default_hash', // Placeholder - should be replaced with proper auth
+        fullName: 'Default User',
+        targetNetCarbs: 20.0,
+        maxFoodsPerWindow: 50,
+        windowDurationDays: 21,
+      );
+      final newUserId = await _userDao.insertUser(defaultUser);
+      user = await _userDao.getUserById(newUserId);
+      if (user == null) {
+        // If still null after creation, return default allowed result
+        debugPrint('[FOOD CREATION] ⚠️ Failed to create user, allowing creation anyway');
+        final now = DateTime.now();
+        return FoodCreationResult(
+          canCreate: true,
+          remainingQuota: 50,
+          resetDate: now.add(const Duration(days: 21)).toIso8601String().split('T')[0],
+        );
+      }
+      debugPrint('[FOOD CREATION] ✅ Created default user with ID: $newUserId');
     }
 
     final now = DateTime.now();
@@ -42,7 +55,7 @@ class FoodCreationService {
 
     if (windowExpired) {
       // Reset window
-      await _userDao!.updateUser(user.copyWith(
+      await _userDao.updateUser(user.copyWith(
         foodCreationCount: 0,
         foodCreationWindowStart: now.toIso8601String(),
       ));
@@ -140,18 +153,12 @@ class FoodCreationService {
   }
 
   Future<int> _getUserLimit(int userId) async {
-    if (kIsWeb) {
-      return 999; // Unlimited on web
-    }
-    final user = await _userDao!.getUserById(userId);
+    final user = await _userDao.getUserById(userId);
     return user?.maxFoodsPerWindow ?? 50;
   }
 
   Future<int> _getUserWindowDays(int userId) async {
-    if (kIsWeb) {
-      return 21; // Default window
-    }
-    final user = await _userDao!.getUserById(userId);
+    final user = await _userDao.getUserById(userId);
     return user?.windowDurationDays ?? 21;
   }
 }

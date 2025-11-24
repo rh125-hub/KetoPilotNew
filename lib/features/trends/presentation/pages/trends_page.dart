@@ -5,7 +5,7 @@ import '../../../../core/themes/app_theme.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../../dashboard/presentation/widgets/weekly_molecules_widget.dart';
 import '../../../dashboard/presentation/widgets/weekly_nutrition_widget.dart';
-import '../../../dashboard/presentation/widgets/macro_bars_widget.dart';
+import '../../../food_diary/presentation/widgets/macro_bars_widget.dart';
 import '../../../dashboard/presentation/widgets/molecule_bars_widget.dart';
 
 @RoutePage()

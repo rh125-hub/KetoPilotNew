@@ -98,10 +98,14 @@ class DriftUserDao {
   /// Update user
   Future<int> updateUser(UserModel user) async {
     try {
+      if (user.userId == null) {
+        throw ArgumentError('User ID is required for update');
+      }
       final db = await _db;
-      return await db.update(db.users).replace(
+      final updated = await (db.update(db.users)
+            ..where((u) => u.userId.equals(user.userId!)))
+          .write(
         UsersCompanion(
-          userId: Value(user.userId!),
           email: Value(user.email),
           passwordHash: Value(user.passwordHash),
           emailVerified: Value(user.emailVerified),
@@ -129,6 +133,7 @@ class DriftUserDao {
           lastLogin: Value(user.lastLogin),
         ),
       );
+      return updated;
     } catch (e) {
       debugPrint('[USER DAO] ❌ Update error: $e');
       rethrow;

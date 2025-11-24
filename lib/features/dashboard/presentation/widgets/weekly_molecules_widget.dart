@@ -20,18 +20,18 @@ class WeeklyMoleculesWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildLegend() {
+  Widget _buildLegend(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildLegendItem('Glucose (mg/dL)', Colors.orange.shade400),
-        _buildLegendItem('BHB (mmol/L)', Colors.amber.shade600),
-        _buildLegendItem('GKI', Colors.blue.shade400),
+        _buildLegendItem(context, 'Glucose (mg/dL)', Colors.orange.shade400),
+        _buildLegendItem(context, 'BHB (mmol/L)', Colors.amber.shade600),
+        _buildLegendItem(context, 'GKI', Colors.blue.shade400),
       ],
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
+  Widget _buildLegendItem(BuildContext context, String label, Color color) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -179,6 +179,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildSummaryMetric(
+                  context,
                   '${avgGlucose.toStringAsFixed(0)}',
                   'Glucose',
                   Colors.orange.shade400,
@@ -186,6 +187,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
               ),
               Expanded(
                 child: _buildSummaryMetric(
+                  context,
                   '${avgBhb.toStringAsFixed(1)}',
                   'BHB',
                   Colors.amber.shade600,
@@ -193,6 +195,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
               ),
               Expanded(
                 child: _buildSummaryMetric(
+                  context,
                   '${avgGki.toStringAsFixed(1)}',
                   'GKI',
                   Colors.blue.shade400,
@@ -237,7 +240,7 @@ class WeeklyMoleculesWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryMetric(String value, String label, Color color) {
+  Widget _buildSummaryMetric(BuildContext context, String value, String label, Color color) {
     return Column(
       children: [
         Text(
