@@ -77,6 +77,9 @@ dependencies:
   uuid: ^4.2.1
   crypto: ^3.0.3
   
+  # Email
+  mailer: ^6.0.1
+  
   # Local notifications
   flutter_local_notifications: ^16.3.0
   

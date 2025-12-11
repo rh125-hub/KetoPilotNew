@@ -4,7 +4,7 @@ import '../drift_database_service.dart';
 import '../drift_database.dart';
 import '../models/user_model.dart';
 
-/// User DAO using Drift (works on all platforms including web)
+//handles all user database operations using Drift
 class DriftUserDao {
   final DriftDatabaseService _dbService = DriftDatabaseService();
 
@@ -17,7 +17,7 @@ class DriftUserDao {
     }
   }
 
-  /// Insert a new user
+  //adds a new user to the database
   Future<int> insertUser(UserModel user) async {
     try {
       final db = await _db;
@@ -56,7 +56,7 @@ class DriftUserDao {
     }
   }
 
-  /// Get user by ID
+  //finds a user by their ID
   Future<UserModel?> getUserById(int userId) async {
     try {
       final db = await _db;
@@ -69,7 +69,7 @@ class DriftUserDao {
     }
   }
 
-  /// Get user by email
+  //finds a user by their email address
   Future<UserModel?> getUserByEmail(String email) async {
     try {
       final db = await _db;
@@ -82,7 +82,7 @@ class DriftUserDao {
     }
   }
 
-  /// Get user by anonymous ID
+  //finds a user by their anonymous ID (for research)
   Future<UserModel?> getUserByAnonymousId(String anonymousId) async {
     try {
       final db = await _db;
@@ -95,7 +95,7 @@ class DriftUserDao {
     }
   }
 
-  /// Update user
+  //updates an existing user's info
   Future<int> updateUser(UserModel user) async {
     try {
       if (user.userId == null) {
@@ -140,19 +140,32 @@ class DriftUserDao {
     }
   }
 
-  /// Update last login timestamp
-  Future<int> updateLastLogin(int userId) async {
+  //records when someone last logged in
+  Future<int> updateLastLogin(int userId, DateTime loginTime) async {
     try {
       final db = await _db;
       return await (db.update(db.users)..where((u) => u.userId.equals(userId))).write(
         UsersCompanion(
-          lastLogin: Value(DateTime.now().toIso8601String()),
+          lastLogin: Value(loginTime.toIso8601String()),
           updatedAt: Value(DateTime.now().toIso8601String()),
         ),
       );
     } catch (e) {
       debugPrint('[USER DAO] ❌ Update last login error: $e');
       rethrow;
+    }
+  }
+
+  //checks if an email is already registered
+  Future<bool> emailExists(String email) async {
+    try {
+      final db = await _db;
+      final query = db.select(db.users)..where((u) => u.email.equals(email));
+      final result = await query.getSingleOrNull();
+      return result != null;
+    } catch (e) {
+      debugPrint('[USER DAO] ❌ Email exists check error: $e');
+      return false;
     }
   }
 

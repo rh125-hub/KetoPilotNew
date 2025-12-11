@@ -2,10 +2,12 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/themes/app_theme.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../core/database/daos/drift_diet_entry_dao.dart';
+import '../../../../core/providers/user_provider.dart';
 import '../../../dashboard/presentation/widgets/weekly_molecules_widget.dart';
 import '../../../dashboard/presentation/widgets/weekly_nutrition_widget.dart';
 import '../../../food_diary/presentation/widgets/macro_bars_widget.dart';
@@ -13,14 +15,14 @@ import '../../../dashboard/presentation/widgets/molecule_bars_widget.dart';
 import '../../utils/weekly_nutrition_utils.dart';
 
 @RoutePage()
-class TrendsPage extends StatefulWidget {
+class TrendsPage extends ConsumerStatefulWidget {
   const TrendsPage({super.key});
 
   @override
-  State<TrendsPage> createState() => _TrendsPageState();
+  ConsumerState<TrendsPage> createState() => _TrendsPageState();
 }
 
-class _TrendsPageState extends State<TrendsPage>
+class _TrendsPageState extends ConsumerState<TrendsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final DriftDietEntryDao _dietEntryDao = DriftDietEntryDao();
@@ -38,8 +40,6 @@ class _TrendsPageState extends State<TrendsPage>
   bool _showDailyView = true;
   
   String? _selectedDay;
-  
-  static const int _userId = 1;
 
   @override
   void initState() {
@@ -50,6 +50,9 @@ class _TrendsPageState extends State<TrendsPage>
   }
 
   Future<void> _loadTodaysNutrition() async {
+    final user = ref.read(userProvider).currentUser;
+    if (user?.userId == null) return;
+    
     setState(() {
       _isLoadingNutrition = true;
     });
@@ -57,7 +60,7 @@ class _TrendsPageState extends State<TrendsPage>
     try {
       final now = DateTime.now();
       final dateStr = now.toIso8601String().split('T')[0];
-      final entries = await _dietEntryDao.getDietEntriesByDate(_userId, dateStr);
+      final entries = await _dietEntryDao.getDietEntriesByDate(user!.userId!, dateStr);
       
       double carbs = 0.0;
       double protein = 0.0;
@@ -84,6 +87,9 @@ class _TrendsPageState extends State<TrendsPage>
   }
 
   Future<void> _loadWeeklyNutrition() async {
+    final user = ref.read(userProvider).currentUser;
+    if (user?.userId == null) return;
+    
     try {
       final weekRange = WeeklyNutritionUtils.getCurrentWeekRange();
       final weekStart = weekRange['start']!;
@@ -93,7 +99,7 @@ class _TrendsPageState extends State<TrendsPage>
       final endDate = WeeklyNutritionUtils.toDateString(weekEnd);
       
       final entries = await _dietEntryDao.getDietEntriesByDateRange(
-        _userId,
+        user!.userId!,
         startDate,
         endDate,
       );

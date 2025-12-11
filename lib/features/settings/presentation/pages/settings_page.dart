@@ -2,9 +2,14 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/themes/app_theme.dart';
 import '../../../../core/providers/theme_provider.dart';
+import '../../../../core/providers/user_provider.dart';
 
 @RoutePage()
 class SettingsPage extends ConsumerStatefulWidget {
@@ -43,6 +48,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildProfileSection() {
+    final user = ref.watch(userProvider).currentUser;
+    
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -64,21 +71,42 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
-              title: const Text('John Doe'),
-              subtitle: const Text('john.doe@example.com'),
+              title: Text(user?.fullName ?? 'No name set'),
+              subtitle: Text(user?.email ?? 'No email'),
               trailing: const Icon(Icons.edit),
               onTap: () {
-                // TODO: Navigate to profile edit
+                context.router.pushNamed('/profile');
               },
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.medical_information),
-              title: const Text('Health Profile'),
-              subtitle: const Text('Medical conditions, goals, etc.'),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () {
-                // TODO: Navigate to health profile
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout', style: TextStyle(color: Colors.red)),
+              onTap: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Logout'),
+                    content: const Text('Are you sure you want to logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+                
+                if (confirm == true && mounted) {
+                  await ref.read(userProvider.notifier).logout();
+                  if (mounted) {
+                    context.router.replaceNamed('/login');
+                  }
+                }
               },
             ),
           ],

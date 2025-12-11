@@ -9,6 +9,8 @@ import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/database_test/database_test_page.dart';
 import '../../features/trends/presentation/pages/trends_page.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 
 part 'app_router.gr.dart';
 
@@ -16,8 +18,11 @@ part 'app_router.gr.dart';
 class AppRouter extends _$AppRouter {
   @override
   List<AutoRoute> get routes => [
+    // Auth routes
+    AutoRoute(page: LoginRoute.page, path: '/login', initial: true),
+    
     // Onboarding route
-    AutoRoute(page: OnboardingRoute.page, path: '/onboarding', initial: true),
+    AutoRoute(page: OnboardingRoute.page, path: '/onboarding'),
 
     // Main app routes
     AutoRoute(page: DashboardRoute.page, path: '/dashboard'),
@@ -29,6 +34,8 @@ class AppRouter extends _$AppRouter {
     AutoRoute(page: HealthLoggingRoute.page, path: '/health-logging'),
 
     AutoRoute(page: SettingsRoute.page, path: '/settings'),
+    
+    AutoRoute(page: ProfileRoute.page, path: '/profile'),
 
     AutoRoute(page: TrendsRoute.page, path: '/trends'),
 

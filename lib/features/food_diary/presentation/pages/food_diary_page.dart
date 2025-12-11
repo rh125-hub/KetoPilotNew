@@ -2,12 +2,14 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/repositories/food_repository.dart';
 import '../../../../core/database/models/food_model.dart';
 import '../../../../core/database/models/diet_entry_model.dart';
 import '../../../../core/database/daos/drift_diet_entry_dao.dart';
 import '../../../../core/database/daos/drift_food_dao.dart';
+import '../../../../core/providers/user_provider.dart';
 
 import '../../data/food_entry_data.dart';
 import '../../utils/food_diary_utils.dart';
@@ -16,14 +18,14 @@ import '../widgets/macro_summary_card.dart';
 import '../dialogs/add_food_dialog.dart';
 
 @RoutePage()
-class FoodDiaryPage extends StatefulWidget {
+class FoodDiaryPage extends ConsumerStatefulWidget {
   const FoodDiaryPage({super.key});
 
   @override
-  State<FoodDiaryPage> createState() => _FoodDiaryPageState();
+  ConsumerState<FoodDiaryPage> createState() => _FoodDiaryPageState();
 }
 
-class _FoodDiaryPageState extends State<FoodDiaryPage>
+class _FoodDiaryPageState extends ConsumerState<FoodDiaryPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   DateTime _selectedDate = DateTime.now();
@@ -41,27 +43,40 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
   double _carbsConsumed = 0.0;
   double _proteinConsumed = 0.0;
   double _fatConsumed = 0.0;
-  final double _carbsLimit = 20.0;
-  final double _proteinGoal = 100.0;
-  final double _fatGoal = 150.0;
-  
-  static const int _userId = 1;
+  double _carbsLimit = 20.0;
+  double _proteinGoal = 100.0;
+  double _fatGoal = 150.0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadUserTargets();
     _loadDietEntries();
   }
   
+  void _loadUserTargets() {
+    final user = ref.read(userProvider).currentUser;
+    if (user != null) {
+      setState(() {
+        _carbsLimit = user.targetNetCarbs;
+        _proteinGoal = user.targetProtein ?? 100.0;
+        _fatGoal = user.targetFat ?? 150.0;
+      });
+    }
+  }
+  
   Future<void> _loadDietEntries() async {
+    final user = ref.read(userProvider).currentUser;
+    if (user?.userId == null) return;
+    
     setState(() {
       _isLoading = true;
     });
     
     try {
       final dateStr = _selectedDate.toIso8601String().split('T')[0];
-      final entries = await _dietEntryDao.getDietEntriesByDate(_userId, dateStr);
+      final entries = await _dietEntryDao.getDietEntriesByDate(user!.userId!, dateStr);
       
       final foodEntries = <FoodEntryData>[];
       
@@ -296,9 +311,14 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
   }
 
   Widget _buildHistoryTab() {
+    final user = ref.read(userProvider).currentUser;
+    if (user?.userId == null) {
+      return const Center(child: Text('No user logged in'));
+    }
+    
     return _WeeklyHistoryView(
       dietEntryDao: _dietEntryDao,
-      userId: _userId,
+      userId: user!.userId!,
     );
   }
 
@@ -972,7 +992,10 @@ class _FoodDiaryPageState extends State<FoodDiaryPage>
     // Removed web blocking - Drift supports IndexedDB on web
     
     final foodRepository = FoodRepository();
-    const userId = 1; // TODO: Get from auth provider
+    final currentUser = ref.read(userProvider).currentUser;
+    if (currentUser?.userId == null) return;
+    
+    final userId = currentUser!.userId!;
     
     // Check if user can create food
     try {
