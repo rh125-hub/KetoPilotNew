@@ -75,11 +75,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           _emailController.text.trim(),
           _passwordController.text,
         );
-        
+
         if (mounted) {
           if (errorMessage == null) {
-            //success - navigate to dashboard
-            context.router.replaceNamed('/dashboard');
+            // >>> CHANGE START: route to setup only if profile incomplete
+            final needsSetup = ref.read(userProvider).needsProfileSetup;
+            context.router.replaceNamed(needsSetup ? '/profile-setup' : '/dashboard');
+            // >>> CHANGE END
           } else {
             //show specific error message
             ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +125,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         final emailError = await _emailService.sendVerificationEmail(
           _emailController.text.trim(),
         );
-        
+
         if (mounted) {
           if (emailError == null) {
             //success
@@ -189,7 +191,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (isValid) {
         //get pending signup data
         final pendingSignup = _emailService.getPendingSignup(email);
-        
+
         if (pendingSignup == null) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -215,7 +217,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
         if (mounted) {
           if (success) {
-            context.router.replaceNamed('/dashboard');
+            // >>> CHANGE START: after signup, go to setup questions (can Skip there)
+            context.router.replaceNamed('/profile-setup');
+            // >>> CHANGE END
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -255,7 +259,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final emailError = await _emailService.resendVerificationCode(
       _emailController.text.trim(),
     );
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -419,16 +423,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       child: _isLoading
                           ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                           : Text(
-                              _awaitingVerification
-                                  ? 'Verify & Sign Up'
-                                  : (_isLogin ? 'Login' : 'Send Verification Code'),
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                        _awaitingVerification
+                            ? 'Verify & Sign Up'
+                            : (_isLogin ? 'Login' : 'Send Verification Code'),
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -437,22 +441,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       onPressed: _isLoading
                           ? null
                           : () {
-                              setState(() {
-                                if (_awaitingVerification) {
-                                  _awaitingVerification = false;
-                                  _verificationCodeController.clear();
-                                } else {
-                                  _isLogin = !_isLogin;
-                                  _formKey.currentState?.reset();
-                                }
-                              });
-                            },
+                        setState(() {
+                          if (_awaitingVerification) {
+                            _awaitingVerification = false;
+                            _verificationCodeController.clear();
+                          } else {
+                            _isLogin = !_isLogin;
+                            _formKey.currentState?.reset();
+                          }
+                        });
+                      },
                       child: Text(
                         _awaitingVerification
                             ? 'Cancel'
                             : (_isLogin
-                                ? 'Don\'t have an account? Sign Up'
-                                : 'Already have an account? Login'),
+                            ? 'Don\'t have an account? Sign Up'
+                            : 'Already have an account? Login'),
                       ),
                     ),
                   ],
@@ -465,3 +469,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
+
+
+
+
+
+

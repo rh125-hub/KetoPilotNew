@@ -18,6 +18,17 @@ class UserProvider extends ChangeNotifier {
   bool get isAuthenticated => _currentUser != null;
   int? get userId => _currentUser?.userId;
 
+  // >>> CHANGE START: helper to decide whether to show profile setup after login/register
+  bool get needsProfileSetup {
+    final u = _currentUser;
+    if (u == null) return false;
+    return u.gender == null ||
+        u.dateOfBirth == null ||
+        u.heightCm == null ||
+        u.initialWeightKg == null;
+  }
+  // >>> CHANGE END
+
   UserProvider() {
     _loadUser();
   }
@@ -91,23 +102,26 @@ class UserProvider extends ChangeNotifier {
         return false;
       }
 
-      //hash the password before storing it
+      final now = DateTime.now().toIso8601String();
+
       final hashedPassword = PasswordUtils.hashPassword(password);
       final newUser = UserModel(
         email: email,
         passwordHash: hashedPassword,
         fullName: fullName,
-        emailVerified: 1, //email is already verified by this point
+        emailVerified: 1,
+        createdAt: now,
+        updatedAt: now,
+        lastLogin: now,
+        // medicalConditions can start empty/null
       );
 
       final userId = await _userDao.insertUser(newUser);
-      
       _currentUser = await _userDao.getUserById(userId);
-      
-      //save their session
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('current_user_id', userId);
-      
+
       notifyListeners();
       return true;
     } catch (e) {
@@ -115,6 +129,8 @@ class UserProvider extends ChangeNotifier {
       return false;
     }
   }
+
+
 
   //updates user profile info
   Future<bool> updateProfile(UserModel updatedUser) async {

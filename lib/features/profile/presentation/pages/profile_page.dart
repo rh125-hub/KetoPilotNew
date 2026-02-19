@@ -1,9 +1,48 @@
+import 'dart:convert'; // >>> CHANGE START: for jsonEncode/jsonDecode
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/user_provider.dart';
 import '../../../../core/database/models/user_model.dart';
+
+// >>> CHANGE START: same common conditions list as ProfileSetupPage
+const List<String> kCommonConditions = [
+  // Physical
+  'Diabetes (Type 1)',
+  'Diabetes (Type 2)',
+  'Prediabetes',
+  'Hypertension (High blood pressure)',
+  'High cholesterol',
+  'Heart disease',
+  'Asthma',
+  'COPD',
+  'Sleep apnea',
+  'Hypothyroidism',
+  'Hyperthyroidism',
+  'PCOS',
+  'IBS (Irritable bowel syndrome)',
+  'GERD (Acid reflux)',
+  'Celiac disease',
+  'Fatty liver disease',
+  'Kidney disease',
+  'Arthritis',
+  'Migraine',
+  'Epilepsy',
+  'Cancer (history)',
+  // Mental
+  'Depression',
+  'Anxiety',
+  'Bipolar disorder',
+  'PTSD',
+  'ADHD',
+  'OCD',
+  'Eating disorder',
+  'Autism spectrum disorder',
+  'Schizophrenia',
+  'Substance use disorder',
+];
+// >>> CHANGE END
 
 @RoutePage()
 class ProfilePage extends ConsumerStatefulWidget {
@@ -23,18 +62,24 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   late TextEditingController _targetProteinController;
   late TextEditingController _targetFatController;
   late TextEditingController _targetCaloriesController;
-  
+
   String? _selectedGender;
   DateTime? _selectedDateOfBirth;
   DateTime? _ketoStartDate;
   bool _isEditing = false;
   bool _isSaving = false;
 
+  // >>> CHANGE START: medical conditions editing state
+  final _diseaseController = TextEditingController();
+  final List<String> _selectedDiseases = [];
+  List<String> _suggestions = [];
+  // >>> CHANGE END
+
   @override
   void initState() {
     super.initState();
     final user = ref.read(userProvider.notifier).currentUser;
-    
+
     _fullNameController = TextEditingController(text: user?.fullName ?? '');
     _emailController = TextEditingController(text: user?.email ?? '');
     _heightController = TextEditingController(
@@ -55,7 +100,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _targetCaloriesController = TextEditingController(
       text: user?.targetCalories?.toString() ?? '',
     );
-    
+
     _selectedGender = user?.gender;
     if (user?.dateOfBirth != null) {
       _selectedDateOfBirth = DateTime.tryParse(user!.dateOfBirth!);
@@ -63,6 +108,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     if (user?.ketoStartDate != null) {
       _ketoStartDate = DateTime.tryParse(user!.ketoStartDate!);
     }
+
+    // >>> CHANGE START: load diseases from medicalConditions JSON list string
+    if (user?.medicalConditions != null && user!.medicalConditions!.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(user.medicalConditions!);
+        if (decoded is List) {
+          _selectedDiseases
+            ..clear()
+            ..addAll(decoded.map((e) => e.toString()).where((s) => s.trim().isNotEmpty));
+        }
+      } catch (_) {
+        // ignore invalid old format
+      }
+    }
+    // >>> CHANGE END
   }
 
   @override
@@ -75,19 +135,24 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _targetProteinController.dispose();
     _targetFatController.dispose();
     _targetCaloriesController.dispose();
+
+    // >>> CHANGE START
+    _diseaseController.dispose();
+    // >>> CHANGE END
+
     super.dispose();
   }
 
   Future<void> _selectDate(BuildContext context, bool isDateOfBirth) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isDateOfBirth 
+      initialDate: isDateOfBirth
           ? (_selectedDateOfBirth ?? DateTime(1990))
           : (_ketoStartDate ?? DateTime.now()),
       firstDate: DateTime(1920),
       lastDate: DateTime.now(),
     );
-    
+
     if (picked != null) {
       setState(() {
         if (isDateOfBirth) {
@@ -99,6 +164,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
   }
 
+  // >>> CHANGE START: disease helpers
+  void _updateSuggestions(String q) {
+    final query = q.trim().toLowerCase();
+    if (query.isEmpty) {
+      setState(() => _suggestions = []);
+      return;
+    }
+    final hits = kCommonConditions
+        .where((c) => c.toLowerCase().contains(query))
+        .take(10)
+        .toList();
+    setState(() => _suggestions = hits);
+  }
+
+  void _addDisease(String name) {
+    final n = name.trim();
+    if (n.isEmpty) return;
+    if (_selectedDiseases.contains(n)) return;
+    setState(() {
+      _selectedDiseases.add(n);
+      _diseaseController.clear();
+      _suggestions = [];
+    });
+  }
+
+  void _removeDisease(String name) {
+    setState(() => _selectedDiseases.remove(name));
+  }
+  // >>> CHANGE END
+
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -107,32 +202,42 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     try {
       final userNotifier = ref.read(userProvider.notifier);
       final currentUser = userNotifier.currentUser;
-      
+
       if (currentUser == null) return;
 
+      // >>> CHANGE START: save diseases as JSON list string (or null)
+      final String? medicalConditionsJson =
+      _selectedDiseases.isEmpty ? null : jsonEncode(_selectedDiseases);
+      // >>> CHANGE END
+
       final updatedUser = currentUser.copyWith(
-        fullName: _fullNameController.text.trim().isEmpty 
-            ? null 
+        fullName: _fullNameController.text.trim().isEmpty
+            ? null
             : _fullNameController.text.trim(),
         gender: _selectedGender,
         dateOfBirth: _selectedDateOfBirth?.toIso8601String().split('T')[0],
-        heightCm: _heightController.text.isEmpty 
-            ? null 
+        heightCm: _heightController.text.isEmpty
+            ? null
             : double.tryParse(_heightController.text),
-        initialWeightKg: _weightController.text.isEmpty 
-            ? null 
+        initialWeightKg: _weightController.text.isEmpty
+            ? null
             : double.tryParse(_weightController.text),
         targetNetCarbs: double.tryParse(_targetCarbsController.text) ?? 20.0,
-        targetProtein: _targetProteinController.text.isEmpty 
-            ? null 
+        targetProtein: _targetProteinController.text.isEmpty
+            ? null
             : double.tryParse(_targetProteinController.text),
-        targetFat: _targetFatController.text.isEmpty 
-            ? null 
+        targetFat: _targetFatController.text.isEmpty
+            ? null
             : double.tryParse(_targetFatController.text),
-        targetCalories: _targetCaloriesController.text.isEmpty 
-            ? null 
+        targetCalories: _targetCaloriesController.text.isEmpty
+            ? null
             : double.tryParse(_targetCaloriesController.text),
         ketoStartDate: _ketoStartDate?.toIso8601String().split('T')[0],
+
+        // >>> CHANGE START
+        medicalConditions: medicalConditionsJson,
+        // >>> CHANGE END
+
         updatedAt: DateTime.now().toIso8601String(),
       );
 
@@ -198,12 +303,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               onPressed: () => setState(() => _isEditing = false),
             ),
             IconButton(
-              icon: _isSaving 
+              icon: _isSaving
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
                   : const Icon(Icons.check),
               onPressed: _isSaving ? null : _saveProfile,
             ),
@@ -287,9 +392,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               items: ['Male', 'Female', 'Other'].map((gender) {
                 return DropdownMenuItem(value: gender, child: Text(gender));
               }).toList(),
-              onChanged: _isEditing ? (value) {
+              onChanged: _isEditing
+                  ? (value) {
                 setState(() => _selectedGender = value);
-              } : null,
+              }
+                  : null,
             ),
             const SizedBox(height: 16),
 
@@ -440,6 +547,63 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               keyboardType: TextInputType.number,
               enabled: _isEditing,
             ),
+
+            // >>> CHANGE START: Medical Conditions section
+            const SizedBox(height: 24),
+            Text(
+              'Medical Conditions',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _diseaseController,
+              decoration: const InputDecoration(
+                labelText: 'Search and add conditions',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+                helperText: 'Type to search, tap to add. You can also type your own and press enter.',
+              ),
+              enabled: _isEditing,
+              onChanged: _isEditing ? _updateSuggestions : null,
+              onFieldSubmitted: _isEditing ? (v) => _addDisease(v) : null,
+            ),
+            if (_isEditing && _suggestions.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 180),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListView.builder(
+                  itemCount: _suggestions.length,
+                  itemBuilder: (_, i) {
+                    final s = _suggestions[i];
+                    return ListTile(
+                      title: Text(s),
+                      onTap: () => _addDisease(s),
+                    );
+                  },
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _selectedDiseases
+                  .map(
+                    (d) => Chip(
+                  label: Text(d),
+                  onDeleted: _isEditing ? () => _removeDisease(d) : null,
+                ),
+              )
+                  .toList(),
+            ),
+            // >>> CHANGE END
+
             const SizedBox(height: 32),
           ],
         ),
